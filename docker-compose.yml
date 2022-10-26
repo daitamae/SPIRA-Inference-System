@@ -1,0 +1,130 @@
+version: '3.9'
+
+
+services:
+  api:
+    image: ${INFERENCE_API_IMAGE_NAME}
+    restart: always
+    depends_on:
+      - mongo
+      - minio
+      - nats
+    env_file: 
+      - envs/database.env
+      - envs/authentication.env
+      - envs/message_service.env
+      - envs/message_listener.env
+      - envs/simple_storage.env
+    command: python main.py
+    ports:
+      - 3000:8000 
+    networks:
+      - nats-network
+      - mongo-network
+      - minio-network
+
+  mongo:
+    image: mongo
+    restart: always
+    env_file:
+      - envs/mongo.env
+    networks:
+      - mongo-network
+
+  mongo-express:
+    image: mongo-express
+    restart: always
+    env_file:
+      - envs/mongo.env
+    ports:
+      - 8081:8081
+    networks:
+      - mongo-network
+
+  nats:
+    image: nats:2.8.4
+    restart: always
+    ports:
+      - 4222:4222
+      - 8222:8222
+    networks:
+      - nats-network
+
+  minio:
+    image: minio/minio
+    restart: always
+    ports:
+      - 9000:9000
+      - 9001:9001
+    command: server /data --console-address ':9001' --address ':9000'
+    volumes:
+      - minio_data:/data
+    env_file:
+      - envs/minio.env
+    networks:
+      - minio-network
+      - mlflow-network
+
+  mlflow-mc:
+    image: minio/mc
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      /tmp/wait-for-it.sh minio:9000;
+      /usr/bin/mc alias set minio ${MLFLOW_S3_ENDPOINT_URL} ${AWS_ACCESS_KEY_ID} ${AWS_SECRET_ACCESS_KEY};
+      /usr/bin/mc mb minio/mlflow;
+      exit 0;
+      "
+    volumes:
+      - ./wait-for-it.sh:/tmp/wait-for-it.sh
+    networks:
+      - minio-network
+
+  db:
+    image: mysql:latest
+    restart: always
+    ports:
+      - 3306:3306
+    env_file:
+      - envs/mlflow/mysql.env
+    volumes:
+      - dbdata:/var/lib/mysql
+    networks:
+      - mlflow-network
+
+  mlflow:
+    image: ${MLFLOW_SERVER_IMAGE_NAME}
+    restart: always
+    expose:
+      - 5000
+    ports:
+      - 5000:5000
+    env_file:
+      - envs/mlflow/mlflow.env
+    command: mlflow server --backend-store-uri mysql+pymysql://${MYSQL_USER}:${MYSQL_PASSWORD}@db:3306/${MYSQL_DATABASE} --default-artifact-root s3://mlflow/ --host 0.0.0.0
+    networks:
+      - mlflow-network 
+
+
+networks:
+  nats-network:
+    driver: bridge
+    name: nats-bridge
+
+  mongo-network:
+    name: mongo-bridge
+
+  minio-network:
+    driver: bridge
+    name: minio-bridge
+
+  mlflow-network:
+    driver: bridge
+    name: mlflow
+
+volumes:
+  dbdata:
+  minio_data:
+
+  
