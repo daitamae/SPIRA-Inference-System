@@ -1,0 +1,14 @@
+version: '3.9'
+
+
+services:
+  model-1:
+    image: ${INFERENCE_SERVICE_IMAGE_NAME}
+    restart: always 
+    env_file:
+      - server_envs/message_service.env
+      - server_envs/message_listener.env
+      - server_envs/simple_storage.env
+      - server_envs/model_register.env
+      - server_envs/mlflow_cred.env
+    command: python main.py
