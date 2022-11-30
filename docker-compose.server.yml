@@ -1,8 +1,8 @@
-version: '3.9'
+version: '3.3'
 
 
 services:
-  model-1:
+  your-model-name-here:
     image: ${INFERENCE_SERVICE_IMAGE_NAME}
     restart: always 
     env_file:

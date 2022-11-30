@@ -1,4 +1,4 @@
-version: '3.9'
+version: '3.3'
 
 
 services:
@@ -17,19 +17,13 @@ services:
       - api_envs/simple_storage.env
     command: python main.py
     ports:
-      - 3000:8000 
-    networks:
-      - nats-network
-      - mongo-network
-      - minio-network
+      - 3000:8000
 
   mongo:
     image: mongo
     restart: always
     env_file:
       - api_envs/mongo.env
-    networks:
-      - mongo-network
 
   mongo-express:
     image: mongo-express
@@ -38,8 +32,6 @@ services:
       - api_envs/mongo.env
     ports:
       - 8081:8081
-    networks:
-      - mongo-network
 
   nats:
     image: nats:2.8.4
@@ -47,8 +39,6 @@ services:
     ports:
       - 4222:4222
       - 8222:8222
-    networks:
-      - nats-network
 
   minio:
     image: minio/minio
@@ -61,9 +51,6 @@ services:
       - minio_data:/data
     env_file:
       - api_envs/minio.env
-    networks:
-      - minio-network
-      - mlflow-network
 
   mlflow-mc:
     image: minio/mc
@@ -78,8 +65,6 @@ services:
       "
     volumes:
       - ./wait-for-it.sh:/tmp/wait-for-it.sh
-    networks:
-      - minio-network
 
   db:
     image: mysql:latest
@@ -90,38 +75,15 @@ services:
       - api_envs/mlflow/mysql.env
     volumes:
       - dbdata:/var/lib/mysql
-    networks:
-      - mlflow-network
 
   mlflow:
     image: ${MLFLOW_SERVER_IMAGE_NAME}
     restart: always
-    expose:
-      - 5000
     ports:
       - 5000:5000
     env_file:
       - api_envs/mlflow/mlflow.env
     command: mlflow server --backend-store-uri mysql+pymysql://${MYSQL_USER}:${MYSQL_PASSWORD}@db:3306/${MYSQL_DATABASE} --default-artifact-root s3://mlflow/ --host 0.0.0.0
-    networks:
-      - mlflow-network 
-
-
-networks:
-  nats-network:
-    driver: bridge
-    name: nats-bridge
-
-  mongo-network:
-    name: mongo-bridge
-
-  minio-network:
-    driver: bridge
-    name: minio-bridge
-
-  mlflow-network:
-    driver: bridge
-    name: mlflow
 
 volumes:
   dbdata:
