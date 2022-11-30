@@ -1,0 +1,16 @@
+[Unit]
+Description=%i model server
+PartOf=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/path-to-project/
+ExecStart=/usr/bin/bash build-server.sh
+ExecStop=/usr/bin/bash stop-server.sh
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=SPIRA-INFERENCE
+
+[Install] 
+WantedBy=multi-user.target

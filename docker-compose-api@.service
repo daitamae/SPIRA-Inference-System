@@ -1,0 +1,16 @@
+[Unit]
+Description=%i inference api
+PartOf=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/path-to-project/
+ExecStart=/usr/bin/bash build-api.sh
+ExecStop=/usr/bin/bash stop-api.sh
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=SPIRA-INFERENCE
+
+[Install] 
+WantedBy=multi-user.target
