@@ -6,9 +6,5 @@ services:
     image: ${INFERENCE_SERVICE_IMAGE_NAME}
     restart: always 
     env_file:
-      - server_envs/message_service.env
-      - server_envs/message_listener.env
-      - server_envs/simple_storage.env
-      - server_envs/model_register.env
-      - server_envs/mlflow_cred.env
+      - .env
     command: python main.py
