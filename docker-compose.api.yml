@@ -75,6 +75,9 @@ services:
   mlflow:
     image: ${MLFLOW_SERVER_IMAGE_NAME}
     restart: always
+    depends_on: 
+      - db
+      - minio
     ports:
       - ${MLFLOW_PORT}:${MLFLOW_INNER_PORT}
     env_file: 
