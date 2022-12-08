@@ -4,10 +4,10 @@ PartOf=docker.service
 After=docker.service
 
 [Service]
-Type=oneshot
+Type=simple
 WorkingDirectory=/path-to-project/
-ExecStart=/usr/bin/bash build-server.sh
-ExecStop=/usr/bin/bash stop-server.sh
+ExecStart=/bin/bash build-server.sh
+ExecStop=/bin/bash stop-server.sh
 StandardOutput=syslog
 StandardError=syslog
 SyslogIdentifier=SPIRA-INFERENCE
