@@ -1,2 +1,2 @@
 #!/bin/bash
-docker-compose -f docker-compose.api.yml stop api mongo mongo-express nats minio mlflow-mc mlflow db
+docker stack rm --compose-file docker-compose.api.yml spira

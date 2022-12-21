@@ -1,2 +1,2 @@
 #!/bin/bash
-docker compose -f docker-compose.server.yml stop your-model-name-here
+docker stack rm --compose-file docker-compose.server.yml spira

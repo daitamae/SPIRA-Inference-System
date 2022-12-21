@@ -1,2 +1,2 @@
 #!/bin/bash
-docker compose -f docker-compose.server.yml up your-model-name-here
+docker stack deploy --compose-file docker-compose.server.yml spira
