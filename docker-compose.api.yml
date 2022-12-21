@@ -4,7 +4,6 @@ version: '3.3'
 services:
   api:
     image: ${INFERENCE_API_IMAGE_NAME}
-    restart: always
     depends_on:
       - mongo
       - minio
@@ -14,33 +13,46 @@ services:
     command: python main.py
     ports:
       - ${API_PORT}:${API_INNER_PORT}
+    deploy:
+      replicas: ${API_NUM_REPLICAS}
+      restart_policy:
+        condition: on-failure
 
   mongo:
     image: mongo
-    restart: always
     env_file: 
       - .env
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
 
   mongo-express:
     image: mongo-express
-    restart: always
     depends_on:
       - mongo
     env_file: 
       - .env
     ports:
       - ${ME_PORT}:${ME_INNER_PORT}
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
 
   nats:
     image: nats:2.8.4
-    restart: always
     ports:
       - ${NATS_PORT_1}:${NATS_INNER_PORT_1}
       - ${NATS_PORT_2}:${NATS_INNER_PORT_2}
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
 
   minio:
     image: minio/minio
-    restart: always
     ports:
       - ${MINIO_PORT_1}:${MINIO_INNER_PORT_1}
       - ${MINIO_PORT_2}:${MINIO_INNER_PORT_2}
@@ -49,6 +61,10 @@ services:
       - minio_data:/data
     env_file: 
       - .env
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
 
   mlflow-mc:
     image: minio/mc
@@ -63,20 +79,26 @@ services:
       "
     volumes:
       - ./wait-for-it.sh:/tmp/wait-for-it.sh
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
 
   db:
     image: mysql:latest
-    restart: always
     ports:
       - ${MLFLOW_DB_PORT}:${MLFLOW_DB_INNER_PORT}
     env_file: 
       - .env
     volumes:
       - dbdata:/var/lib/mysql
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
 
   mlflow:
     image: ${MLFLOW_SERVER_IMAGE_NAME}
-    restart: always
     depends_on: 
       - db
       - minio
@@ -85,6 +107,10 @@ services:
     env_file: 
       - .env
     command: mlflow server --backend-store-uri mysql+pymysql://${MYSQL_USER}:${MYSQL_PASSWORD}@db:${MLFLOW_DB_INNER_PORT}/${MYSQL_DATABASE} --default-artifact-root s3://mlflow/ --host 0.0.0.0
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
 
 volumes:
   dbdata:

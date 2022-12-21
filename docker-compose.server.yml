@@ -4,7 +4,10 @@ version: '3.3'
 services:
   your-model-name-here:
     image: ${INFERENCE_SERVICE_IMAGE_NAME}
-    restart: always 
     env_file:
       - .env
     command: python main.py
+  deploy:
+    replicas: ${SERVER_NUM_REPLICAS}
+    restart_policy:
+      condition: on-failure
