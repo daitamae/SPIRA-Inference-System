@@ -4,15 +4,15 @@ version: '3.3'
 services:
   api:
     image: ${INFERENCE_API_IMAGE_NAME}
+    command: python main.py
+    ports:
+      - ${API_PORT}:${API_INNER_PORT}
     depends_on:
       - mongo
       - minio
       - nats
     env_file: 
       - .env
-    command: python main.py
-    ports:
-      - ${API_PORT}:${API_INNER_PORT}
     deploy:
       replicas: ${API_NUM_REPLICAS}
       restart_policy:
@@ -53,10 +53,10 @@ services:
 
   minio:
     image: minio/minio
+    command: server /data --console-address ':${MINIO_INNER_PORT_2}' --address ':${MINIO_INNER_PORT_1}'
     ports:
       - ${MINIO_PORT_1}:${MINIO_INNER_PORT_1}
       - ${MINIO_PORT_2}:${MINIO_INNER_PORT_2}
-    command: server /data --console-address ':${MINIO_INNER_PORT_2}' --address ':${MINIO_INNER_PORT_1}'
     volumes:
       - minio_data:/data
     env_file: 
@@ -99,6 +99,7 @@ services:
 
   mlflow:
     image: ${MLFLOW_SERVER_IMAGE_NAME}
+    command: mlflow server --backend-store-uri mysql+pymysql://${MYSQL_USER}:${MYSQL_PASSWORD}@db:${MLFLOW_DB_INNER_PORT}/${MYSQL_DATABASE} --default-artifact-root s3://mlflow/ --host 0.0.0.0
     depends_on: 
       - db
       - minio
@@ -106,7 +107,6 @@ services:
       - ${MLFLOW_PORT}:${MLFLOW_INNER_PORT}
     env_file: 
       - .env
-    command: mlflow server --backend-store-uri mysql+pymysql://${MYSQL_USER}:${MYSQL_PASSWORD}@db:${MLFLOW_DB_INNER_PORT}/${MYSQL_DATABASE} --default-artifact-root s3://mlflow/ --host 0.0.0.0
     deploy:
       replicas: 1
       restart_policy:
