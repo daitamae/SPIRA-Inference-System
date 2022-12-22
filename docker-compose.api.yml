@@ -6,7 +6,10 @@ services:
     image: ${INFERENCE_API_IMAGE_NAME}
     command: python main.py
     ports:
-      - ${API_PORT}:${API_INNER_PORT}
+      - target: ${API_INNER_PORT}
+        published: ${API_PORT}
+        protocol: tcp
+        mode: host
     depends_on:
       - mongo
       - minio
@@ -35,7 +38,10 @@ services:
     env_file: 
       - .env
     ports:
-      - ${ME_PORT}:${ME_INNER_PORT}
+      - target: ${ME_INNER_PORT}
+        published: ${ME_PORT}
+        protocol: tcp
+        mode: host
     deploy:
       replicas: 1
       restart_policy:
@@ -44,8 +50,14 @@ services:
   nats:
     image: nats:2.8.4
     ports:
-      - ${NATS_PORT_1}:${NATS_INNER_PORT_1}
-      - ${NATS_PORT_2}:${NATS_INNER_PORT_2}
+      - target: ${NATS_INNER_PORT_1}
+        published: ${NATS_PORT_1}
+        protocol: tcp
+        mode: host
+      - target: ${NATS_INNER_PORT_2}
+        published: ${NATS_PORT_2}
+        protocol: tcp
+        mode: host
     deploy:
       replicas: 1
       restart_policy:
@@ -55,8 +67,14 @@ services:
     image: minio/minio
     command: server /data --console-address ':${MINIO_INNER_PORT_2}' --address ':${MINIO_INNER_PORT_1}'
     ports:
-      - ${MINIO_PORT_1}:${MINIO_INNER_PORT_1}
-      - ${MINIO_PORT_2}:${MINIO_INNER_PORT_2}
+      - target: ${MINIO_INNER_PORT_1}
+        published: ${MINIO_PORT_1}
+        protocol: tcp
+        mode: host
+      - target: ${MINIO_INNER_PORT_2}
+        published: ${MINIO_PORT_2}
+        protocol: tcp
+        mode: host
     volumes:
       - minio_data:/data
     env_file: 
@@ -87,7 +105,10 @@ services:
   db:
     image: mysql:latest
     ports:
-      - ${MLFLOW_DB_PORT}:${MLFLOW_DB_INNER_PORT}
+      - target: ${MLFLOW_DB_INNER_PORT}
+        published: ${MLFLOW_DB_PORT}
+        protocol: tcp
+        mode: host
     env_file: 
       - .env
     volumes:
@@ -104,7 +125,10 @@ services:
       - db
       - minio
     ports:
-      - ${MLFLOW_PORT}:${MLFLOW_INNER_PORT}
+      - target: ${MLFLOW_INNER_PORT}
+        published: ${MLFLOW_PORT}
+        protocol: tcp
+        mode: host
     env_file: 
       - .env
     deploy:
